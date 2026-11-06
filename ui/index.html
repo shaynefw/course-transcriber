@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Transcriber</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="/ui/style.css">
+</head>
+<body data-tab="sources">
+<div class="crt" aria-hidden="true"></div>
+<div class="boot" id="boot" aria-hidden="true"><pre id="bootText"></pre></div>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 28" aria-hidden="true"><g fill="currentColor"><rect x="1" y="11" width="3.4" height="6" rx="1.7"/><rect x="7" y="6" width="3.4" height="16" rx="1.7"/><rect x="13" y="1" width="3.4" height="26" rx="1.7"/><rect x="19" y="8" width="3.4" height="12" rx="1.7"/><rect x="25" y="3" width="3.4" height="22" rx="1.7"/><rect x="31" y="9" width="3.4" height="10" rx="1.7"/></g></svg>
+      <div><b>TRANSCRIBER</b><span class="sub">LOCAL AUDIO / VIDEO TERMINAL</span></div>
+    </div>
+    <canvas id="wave" width="600" height="44" aria-hidden="true"></canvas>
+    <div class="topstats" id="topstats" aria-live="off"></div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" data-tab="sources"><i>1</i>SOURCES</button>
+    <button class="tab" role="tab" data-tab="transcribe"><i>2</i>TRANSCRIBE</button>
+    <button class="tab" role="tab" data-tab="snapshots"><i>3</i>SNAPSHOTS</button>
+    <button class="tab" role="tab" data-tab="files"><i>4</i>FILES</button>
+    <button class="tab" role="tab" data-tab="ai"><i>5</i>AI</button>
+    <button class="tab" role="tab" data-tab="system"><i>6</i>SYSTEM</button>
+  </nav>
+
+  <main>
+    <!-- ============================== SOURCES ============================== -->
+    <section class="panel" id="tab-sources" role="tabpanel">
+      <div class="seg" id="srcSeg">
+        <button data-sub="courses" class="on">COURSES</button>
+        <button data-sub="singles">SINGLE FILES</button>
+        <button data-sub="web">WEB VIDEOS</button>
+      </div>
+
+      <div class="sub on" id="sub-courses">
+        <div class="box"><h3>COURSE FOLDERS</h3>
+          <div id="courses" class="list empty">LOADING…</div>
+          <div class="row mt"><button class="btn primary" id="add" data-idle>+ ADD COURSE FOLDER</button></div>
+          <p class="hint">Pick the folder whose subfolders are the modules. Your originals are only read, never changed, moved or deleted. Picked single files and downloaded web videos have their own sections.</p>
+        </div>
+      </div>
+
+      <div class="sub" id="sub-singles">
+        <div class="box"><h3>SINGLE FILES<span class="long"> (AUDIO OR VIDEO)</span></h3>
+          <p class="hint top0">For WhatsApp voice notes (.ogg / .opus), phone recordings and one-off videos. Uses the model chosen in TRANSCRIBE. Files are linked into <b>videos/Single files/</b> and the results land in <b>transcripts/Single files/</b>.</p>
+          <div class="row">
+            <label>LANGUAGE <select id="flang"><option value="auto" selected>AUTO-DETECT</option><option value="en">ENGLISH</option></select></label>
+            <label class="chk"><input type="checkbox" id="fsn"><span>ALSO TAKE SNAPSHOTS (VIDEO FILES)</span></label>
+          </div>
+          <div class="row mt"><button class="btn primary" id="pickfiles" data-idle>CHOOSE FILES AND TRANSCRIBE…</button></div>
+        </div>
+        <div class="box"><h3>PICKED FILES</h3><div id="singlesList" class="list empty">NOTHING PICKED YET</div></div>
+      </div>
+
+      <div class="sub" id="sub-web">
+        <div class="box"><h3>WEB VIDEOS<span class="long"> (YOUTUBE AND OTHER LINKS)</span></h3>
+          <textarea id="urls" rows="4" placeholder="Paste one or more links, one per line (single videos or playlists)" spellcheck="false"></textarea>
+          <div class="row mt">
+            <label>QUALITY <select id="wq"><option value="720">720P</option><option value="1080" selected>1080P</option><option value="best">BEST AVAILABLE</option></select></label>
+            <label class="chk"><input type="checkbox" id="wpl"><span>WHOLE PLAYLIST IF A LINK IS A VIDEO INSIDE ONE</span></label>
+          </div>
+          <div class="row mt">
+            <label class="chk"><input type="checkbox" id="wtr" checked><span>TRANSCRIBE</span></label>
+            <label class="chk"><input type="checkbox" id="wsn" checked><span>TAKE SNAPSHOTS (USES THE SNAPSHOTS TAB SETTINGS)</span></label>
+          </div>
+          <p class="hint">Downloads to <b>videos/Web videos/&lt;playlist or channel&gt;/</b>, then runs the same steps on just those videos. The videos stay on disk so you can redo snapshots with other settings (delete them from the FILES tab when finished). Only download videos you're allowed to keep for personal study.</p>
+          <div class="row mt"><button class="btn primary" id="webgo" data-idle>DOWNLOAD &amp; PROCESS</button><button class="btn" id="o-web">OPEN DOWNLOADS</button><button class="btn ghost" id="upd" title="YouTube changes often; update the downloader if downloads start failing">UPDATE DOWNLOADER</button></div>
+        </div>
+        <div class="box"><h3>DOWNLOADED VIDEOS</h3><div id="webList" class="list empty">NOTHING DOWNLOADED YET</div></div>
+      </div>
+    </section>
+
+    <!-- ============================ TRANSCRIBE ============================= -->
+    <section class="panel" id="tab-transcribe" role="tabpanel">
+      <div class="box"><h3>TRANSCRIBE</h3>
+        <div class="row">
+          <label>MODEL <select id="model">
+            <option value="small" selected>SMALL (RECOMMENDED)</option><option value="base">BASE (FASTER, ROUGHER)</option>
+            <option value="medium">MEDIUM (SLOWER, MORE ACCURATE)</option><option value="tiny">TINY (FASTEST, DRAFT)</option></select></label>
+          <label class="chk"><input type="checkbox" id="english" checked><span>ENGLISH ONLY</span></label>
+          <label class="chk"><input type="checkbox" id="watch"><span>KEEP WATCHING FOR NEW VIDEOS</span></label>
+        </div>
+        <p class="hint">On this Mac, “small” runs roughly 6–11× faster than real time. Lessons that already have a transcript are skipped, so you can stop and resume any time. The same model and language settings are used by Single files and Web videos.</p>
+        <div class="scope" id="scopeTr"></div>
+        <div class="row mt"><button class="btn primary big" id="go" data-idle>START TRANSCRIBING</button></div>
+      </div>
+    </section>
+
+    <!-- ============================= SNAPSHOTS ============================= -->
+    <section class="panel" id="tab-snapshots" role="tabpanel">
+      <div class="box"><h3>TAKE SNAPSHOTS</h3>
+        <div class="row">
+          <label>PRESET <select id="preset">
+            <option value="frames">FRAME-BY-FRAME VISUALS (1 S, 10 S, EVERY LOOK)</option>
+            <option value="safety" selected>SAFETY NET: VISUAL BURSTS + BACKGROUND FRAMES</option>
+            <option value="overview">OVERVIEW (EVERY 5 S WHILE TALKING)</option>
+            <option value="custom">CUSTOM</option></select></label>
+        </div>
+        <div class="row mt">
+          <label>CAPTURE <select id="capture">
+            <option value="all">EVERYTHING WHILE TALKING</option><option value="visual">ONLY AROUND VISUAL CUES (FEWER IMAGES)</option>
+            <option value="combined">VISUAL CUES + BACKGROUND FRAMES (SAFETY NET)</option></select></label>
+          <label>LOOK EVERY <select id="interval"><option value="1">1 S</option><option value="3">3 S</option><option value="5" selected>5 S</option><option value="10">10 S</option><option value="15">15 S</option><option value="30">30 S</option></select></label>
+          <label id="l-burst" hidden>CUE BURSTS LAST <select id="burst"><option value="5" selected>5 S</option><option value="10">10 S</option></select><small> (1 FRAME/SEC)</small></label>
+          <label>KEEP <select id="change">
+            <option value="0">EVERY LOOK, EVEN IF NOTHING CHANGED</option><option value="0.3">EVERY SMALL CHANGE (SENSITIVE)</option>
+            <option value="1" selected>CLEAR CHANGES (NORMAL)</option><option value="3">ONLY BIG CHANGES (RELAXED)</option></select></label>
+        </div>
+        <div class="row mt"><label class="chk"><input type="checkbox" id="redo"><span>REDO LESSONS THAT ALREADY HAVE THIS KIND OF SNAPSHOT</span></label></div>
+        <p class="hint" id="h-all">Saves compressed JPEGs every few seconds while someone is talking, skips frames that look like the last saved one, and always grabs a frame at each [VISUAL] cue. Saved in <b>snapshots/</b>.</p>
+        <p class="hint" id="h-vis" hidden>Needs transcripts. Starts 1 second before each [VISUAL] line and takes a frame at your “look every” rate for the burst length (overlaps are merged). Choose “every look” under KEEP to save frames even when nothing moved. Saved in <b>snapshots-visual/</b>.</p>
+        <p class="hint" id="h-comb" hidden>Every [VISUAL] cue gets a full 1-frame-per-second burst (always saved, named _VISUAL) and everything else gets a background frame at your “look every” rate while someone is talking, skipping unchanged ones. Catches important moments the transcript didn’t flag. Saved in <b>snapshots-combined/</b>.</p>
+        <div class="scope" id="scopeSn"></div>
+        <div class="row mt"><button class="btn primary big" id="snap" data-idle>TAKE SNAPSHOTS</button></div>
+      </div>
+    </section>
+
+    <!-- =============================== FILES =============================== -->
+    <section class="panel" id="tab-files" role="tabpanel">
+      <div class="storage" id="storage"></div>
+      <div class="files" id="files" data-pane="tree">
+        <aside class="ftree">
+          <div class="fsearch"><input id="fsearch" type="search" placeholder="FILTER LESSONS…  ( / )" autocomplete="off" spellcheck="false"><button class="btn small" id="frefresh" title="Reload the file list">↻</button></div>
+          <div id="tree" class="tree"></div>
+        </aside>
+        <section class="fview" id="fview"><div class="placeholder">SELECT A COURSE, MODULE OR LESSON ON THE LEFT TO VIEW ITS FILES.</div></section>
+      </div>
+    </section>
+
+    <!-- ================================ AI ================================= -->
+    <section class="panel" id="tab-ai" role="tabpanel">
+      <div class="box"><h3>COPY-PASTE PROMPT FOR YOUR AI</h3>
+        <p class="hint top0">Paste this into any AI that can read files on this computer (for example Claude Code). It points the AI at a generated guide, a map of your library and its own notes, using this computer's real folder paths. Open this tab on whichever device the files are on and the prompt always has the right paths.</p>
+        <div class="row">
+          <label class="fill">TASK <select id="aiTask"><option value="study" selected>STUDY AND LEARN THE MATERIAL</option><option value="resume">CONTINUE FROM ITS NOTES</option><option value="ask">ANSWER MY QUESTIONS FROM THE MATERIAL</option></select></label>
+        </div>
+        <div class="row mt">
+          <label class="fill">COURSE <select id="aiCourse"><option value="">ALL COURSES</option></select></label>
+          <label class="fill">MODULE <select id="aiModule"><option value="">ALL MODULES</option></select></label>
+          <label class="fill">LESSON <select id="aiLesson"><option value="">ALL LESSONS</option></select></label>
+        </div>
+        <label class="blk mt">MY GOAL OR QUESTION (OPTIONAL)
+          <textarea id="aiGoal" rows="2" placeholder="e.g. Learn the entry rules and check them against the screenshots" spellcheck="false"></textarea></label>
+        <textarea id="aiPrompt" class="prompt" readonly rows="16" spellcheck="false" aria-label="The prompt to copy"></textarea>
+        <div class="row mt"><button class="btn primary" id="aiCopy">COPY PROMPT</button><button class="btn" id="aiRefresh">REFRESH GUIDE FILES</button><span class="hint nm" id="aiMsg"></span></div>
+      </div>
+      <div class="box"><h3>WHAT THE AI WILL FIND</h3>
+        <div id="aiStatus" class="readout" style="margin-top:0">LOADING…</div>
+        <div class="row mt">
+          <button class="btn small" data-aiview="guide">VIEW AI-GUIDE.MD</button>
+          <button class="btn small" data-aiview="library">VIEW LIBRARY.MD</button>
+          <button class="btn small" data-aiview="findingsindex">VIEW NOTES INDEX</button>
+          <button class="btn small" id="aiOpenFindings">OPEN NOTES FOLDER</button>
+        </div>
+        <p class="hint">The AI keeps one small notes file per lesson in <b>findings/</b> (named like <b>P01-02-findings.md</b>) so it doesn't have to re-read transcripts or clutter the chat. It creates them with <b>python3 findings.py new "M02-04"</b>, and you can read them in the FILES tab (lesson → FINDINGS).</p>
+      </div>
+    </section>
+
+    <!-- ============================== SYSTEM =============================== -->
+    <section class="panel" id="tab-system" role="tabpanel">
+      <div class="box"><h3>DISPLAY</h3>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="fxCrt" checked><span>CRT EFFECTS (SCANLINES, GLOW, FLICKER)</span></label>
+          <label class="chk"><input type="checkbox" id="fxWave" checked><span>ANIMATED WAVEFORM</span></label>
+        </div>
+      </div>
+      <div class="box"><h3>FOLDERS</h3>
+        <div class="row">
+          <button class="btn" data-open="transcripts">TRANSCRIPTS</button>
+          <button class="btn" data-open="snapshots">SNAPSHOTS: OVERVIEW</button>
+          <button class="btn" data-open="snapshots-visual">SNAPSHOTS: VISUAL</button>
+          <button class="btn" data-open="snapshots-combined">SNAPSHOTS: COMBINED</button>
+          <button class="btn" data-open="webvideos">DOWNLOADS</button>
+        </div>
+        <p class="hint">These open the folder in Finder. You can also browse, read and delete everything in the FILES tab.</p>
+      </div>
+      <div class="box"><h3>MAINTENANCE</h3>
+        <div class="row">
+          <button class="btn" id="retag" data-idle title="Use after editing VISUAL_PHRASES in transcribe.py">RE-TAG VISUAL CUES</button>
+          <button class="btn" id="o-fail" hidden>VIEW FAILED FILES</button>
+        </div>
+        <p class="hint">Re-tag applies your phrase list to existing transcripts without re-transcribing, then rebuilds the indexes and bundles. The phrase list is at the top of transcribe.py.</p>
+      </div>
+      <div class="box"><h3>KEYBOARD</h3>
+        <p class="hint top0"><b>1–6</b> switch tabs · <b>/</b> filter lessons in FILES · <b>Esc</b> close a dialog or picture · <b>← →</b> step through pictures</p>
+      </div>
+      <div class="box"><h3>SHUT DOWN</h3>
+        <div class="row"><button class="btn danger" id="quit">QUIT TRANSCRIBER</button></div>
+        <p class="hint">Closing the browser tab does not stop a running job; the panel keeps going until you quit it here. Finished work is always kept.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ always-visible progress dock ============ -->
+<footer class="dock" id="dock">
+  <div class="dockbar">
+    <div class="dstate"><span class="pill" id="phasePill">IDLE</span></div>
+    <div class="dmain">
+      <div class="dline"><span class="dname" id="curName">READY</span><span class="dmeta" id="curMeta"></span></div>
+      <div class="bar"><i id="curBar" style="width:0"></i></div>
+      <div class="dline sm full"><span id="runMeta"></span><span id="batchMeta" class="batch"></span></div>
+      <div class="dline sm mini" id="miniMeta"></div>
+    </div>
+    <div class="dact">
+      <button class="btn primary" id="reopen" hidden>REOPEN</button>
+      <button class="btn danger" id="stop" hidden>STOP</button>
+      <button class="btn small" id="logToggle" aria-expanded="false">LOG ▲</button>
+    </div>
+  </div>
+  <div class="drawer" id="drawer" hidden>
+    <div class="row"><button class="btn small" id="copylog">COPY LOG</button><span class="hint nm" id="copied"></span></div>
+    <pre id="log"></pre>
+  </div>
+</footer>
+
+<div class="overlay" id="modal" hidden></div>
+<div class="overlay light" id="lightbox" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/ui/app.js"></script>
+</body>
+</html>

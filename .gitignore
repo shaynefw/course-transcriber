@@ -1,0 +1,26 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.part
+.venv/
+
+# Your data: never commit these (videos are linked in here, outputs can be many GB)
+videos/
+transcripts/
+snapshots/
+snapshots-visual/
+snapshots-combined/
+course-notes/
+
+# Built on each machine by make-app.command
+Transcriber.app/
+
+# Generated per computer for your AI (they contain this machine's paths), and the AI's own notes
+AI-GUIDE.md
+LIBRARY.md
+findings/
+
+# Local working notes (not part of the project)
+findings.md
+progress.md
+task_plan.md
