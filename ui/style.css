@@ -407,9 +407,46 @@ input[type=checkbox]:indeterminate::after{transform:scale(1);width:9px;height:3p
   .dd-list{max-width:calc(100vw - 16px)}.dd-opt{padding:11px 10px;font-size:14px;white-space:normal}
 }
 
+/* ---------- MY FOLDERS ---------- */
+.fmode{padding:10px 10px 0}.fmode .seg{width:100%;margin:0}.fmode .seg button{flex:1;padding:7px 4px;letter-spacing:.1em}
+.fnew{padding:8px 10px 0}.fnew .btn{width:100%}
+.tsep{border-top:1px dashed var(--gdd);margin:6px 10px}
+.placeholder.small{padding:16px 12px;font-size:12px}
+.tnode.drop,.rows .rw.drop{outline:2px dashed var(--g);outline-offset:-2px;background:rgba(66,255,148,.2)}
+.mf-in{font-size:11.5px;letter-spacing:.1em;color:var(--g2);margin:-4px 0 12px;overflow-wrap:anywhere}
+.mf-in a,.crumbs a{color:var(--g);text-decoration:underline dotted;text-underline-offset:3px}
+.mfbar{border-top:1px solid var(--gd);padding-top:10px;margin-top:14px}
+.mfbody{border-top:1px dashed var(--gdd)}
+.mfl,.mfg{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px dashed var(--gdd)}
+.mfg{background:rgba(66,255,148,.07);color:var(--g);font-weight:700;letter-spacing:.06em}
+.mfg .mfn{overflow-wrap:anywhere}
+.mfg.d1,.mfl.d1{padding-left:18px}.mfl.d2{padding-left:34px}
+.mfl .m,.mfg .m{font-size:11.5px;color:var(--g2);opacity:.85;white-space:nowrap}
+.mfl.d2 + .mfl.d2,.mfl.d1 + .mfl.d1{}
+.mfc{display:grid;place-items:center;min-width:22px;min-height:22px}
+.mft{font:inherit;text-align:left;background:none;border:0;color:var(--ink);padding:0;overflow-wrap:anywhere;text-shadow:inherit}
+.mfl.dragging{opacity:.5}
+.mfsub{margin:0 0 12px}
+.rows.mfsub .rw .t{color:var(--g)}
+.pklist{border:1px solid var(--gd);border-radius:5px;max-height:38vh;overflow:auto;margin-top:8px;padding:4px 0;background:#010a04}
+.pk{display:flex;gap:10px;align-items:center;width:100%;font:inherit;font-size:13px;text-align:left;background:transparent;border:0;border-left:3px solid transparent;color:var(--g2);padding:8px 10px;text-shadow:none}
+.pk .pkn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pk .pkc{font-size:10.5px;color:var(--gd)}
+.pk.root{border-bottom:1px dashed var(--gdd)}
+.pk.on{background:rgba(66,255,148,.18);border-left-color:var(--g);color:var(--g);font-weight:700}
+.pknew{display:flex;gap:8px;margin-top:10px}.pknew input{flex:1;min-width:0;margin-top:0!important;width:auto!important}
+.hint.bad-t{color:var(--bad);opacity:1}
+.mfkeep{margin-top:12px;align-items:flex-start;line-height:1.4}
+@media (hover:hover){.pk:hover,.mfl:hover{background:rgba(66,255,148,.09)}.mft:hover{color:var(--g)}}
+@media (max-width:520px){
+  .mfl,.mfg{gap:8px}.mfl .m{display:none}
+  .mfl.d2{padding-left:26px}.mfl.d1,.mfg.d1{padding-left:12px}
+  .pknew{flex-wrap:wrap}.pknew .btn{flex:1 1 100%}
+  .pk{padding:12px 10px}
+}
+
 /* ---------- themed mouse cursors (kept last so they win over any earlier cursor rule) ---------- */
 html,body{cursor:var(--cur-default)}
-button,.btn,.tab,.tnode,.seg button,.ftabs button,.rw,label.chk,label.chk *,input[type=checkbox],.dd-btn,.dd-opt,.item .acts *,.srow,.srow *,.sg-h,.sg-h *,.dlg .opt,[role=button],summary,select{cursor:var(--cur-pointer)}
+button,.btn,.tab,.tnode,.seg button,.ftabs button,.rw,label.chk,label.chk *,input[type=checkbox],.dd-btn,.dd-opt,.item .acts *,.srow,.srow *,.sg-h,.sg-h *,.dlg .opt,[role=button],summary,select,.pk,.mft,.mfc,.mfc *,.mf-in a,.crumbs a,.mfg,.mfl{cursor:var(--cur-pointer)}
 input[type=text],input[type=search],textarea,.viewer,.viewer .ln,.readout,.hint{cursor:var(--cur-text)}
 .viewer .ln.vis,.viewer .ln.ts{cursor:var(--cur-pointer)}
 .grid figure,.grid figure *{cursor:var(--cur-zoom)}

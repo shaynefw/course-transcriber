@@ -307,13 +307,17 @@ async function reopenFlow(say) {
 /* ============================== FILES: tree ============================== */
 const OPEN = new Set();
 let FILTER = "";
+let MODE = store.get("fmode") === "mf" ? "mf" : "ch", FOLD = { folders: [], assign: {} }, FM = {}, PLACE = {}, INF = {};   /* My folders (see folders.js) */
 async function loadTree(force) {
   if (!TREE) $("#tree").innerHTML = '<div class="placeholder">LOADING FILES…</div>';
   try { TREE = await get("/api/tree" + (force ? "?force=1" : "")); }
   catch (e) { toast("COULDN'T READ THE FILE LIST: " + e.message, true); return; }
+  try { FOLD = await get("/api/folders"); } catch (e) { }
   treeDirty = false; LES = {};
   TREE.courses.forEach(c => c.modules.forEach(m => m.lessons.forEach(l => LES[l.rel] = l)));
+  indexFolders();
   if (SEL && SEL.t === "lesson" && !LES[SEL.rel]) SEL = null;
+  if (SEL && SEL.t === "mf" && SEL.id !== "_" && !FM[SEL.id]) SEL = null;
   renderTree(); renderView(); loadStorage(force); topStats();
 }
 async function loadStorage(force) {
@@ -340,6 +344,7 @@ function badges(l) {
 function renderTree() {
   const el = $("#tree");
   if (!TREE) { el.innerHTML = ""; return; }
+  if (MODE === "mf") return renderFoldTree();
   if (!TREE.courses.length) { el.innerHTML = '<div class="placeholder">NOTHING HERE YET.<br>TRANSCRIBE OR TAKE SNAPSHOTS FIRST.</div>'; return; }
   const out = [];
   TREE.courses.forEach(c => {
@@ -381,7 +386,8 @@ function findFolder(sel) {
 }
 function renderView() {
   const v = $("#fview");
-  if (!TREE || !SEL) { $("#files").dataset.pane = "tree"; v.innerHTML = '<div class="placeholder">SELECT A COURSE, MODULE OR LESSON TO VIEW ITS FILES.</div>'; return; }
+  if (!TREE || !SEL) { $("#files").dataset.pane = "tree"; v.innerHTML = MODE === "mf" ? '<div class="placeholder">PICK A FOLDER ON THE LEFT, OR MAKE ONE WITH + NEW FOLDER.<br>MY FOLDERS ONLY LABEL YOUR LESSONS. NO FILES ARE MOVED.</div>' : '<div class="placeholder">SELECT A COURSE, MODULE OR LESSON TO VIEW ITS FILES.</div>'; return; }
+  if (SEL.t === "mf") return renderMF(SEL);
   if (SEL.t === "lesson") return renderLesson(LES[SEL.rel]);
   const f = findFolder(SEL); if (!f) { SEL = null; return renderView(); }
   renderFolder(f);
@@ -395,7 +401,7 @@ function renderFolder(f) {
   const c = setCounts(f.lessons), isModule = !!f.module;
   if (!V.tab || !["overview", "index", "bundle"].includes(V.tab)) V.tab = "overview";
   const hasIndex = f.course.index, hasBundle = isModule && f.module.bundle;
-  $("#fview").innerHTML = `<button class="btn small back" data-back>← LIBRARY</button><div class="fhead"><div class="crumbs">${esc(f.crumbs)}</div><h2>${esc(f.label)}</h2></div>
+  $("#fview").innerHTML = `<button class="btn small back" data-back>← LIBRARY</button><div class="fhead"><div class="crumbs">${esc(f.crumbs)}</div><h2>${esc(f.label)}</h2></div>${folderTag(f.lessons.map(l => l.rel))}
     <div class="stat4"><div><small>LESSONS</small><b>${f.lessons.length}</b></div><div><small>TRANSCRIBED</small><b>${c.t}</b></div><div><small>WORDS</small><b>${num(c.words)}</b></div>
       <div><small>SNAPSHOT SETS</small><b>${c.a} / ${c.v} / ${c.c}</b></div>${c.d ? `<div><small>DOWNLOADED VIDEOS</small><b>${c.d}</b></div>` : ""}</div>
     <div class="ftabs"><button data-vt="overview" class="${V.tab === "overview" ? "on" : ""}">OVERVIEW</button>
@@ -403,8 +409,10 @@ function renderFolder(f) {
       ${isModule ? `<button data-vt="bundle" class="${V.tab === "bundle" ? "on" : ""}" ${hasBundle ? "" : "disabled"}>UPLOAD BUNDLE</button>` : ""}</div>
     <div class="toolbar"><span class="grow"></span><button class="btn small" id="vCopy" ${V.tab === "overview" ? "hidden" : ""}>COPY</button>
       <button class="btn small" id="vAi" title="Copy a prompt that points your AI at this ${isModule ? "module" : "course"}">COPY AI PROMPT</button>
+      <button class="btn small" id="vMove" title="Put this ${isModule ? "module" : "course"} in one of your own folders">MOVE TO FOLDER…</button>
       <button class="btn small" id="vReveal">SHOW IN FINDER</button><button class="btn small danger" id="vDelete" ${ST && ST.running ? "disabled title='A job is running'" : ""}>DELETE…</button></div>
     <div id="vbody"></div>`;
+  $("#vMove").onclick = () => moveGroup(f.course.name, isModule ? f.module.path : null, f.lessons);
   $$("#fview [data-vt]").forEach(b => b.onclick = () => { V.tab = b.dataset.vt; renderFolder(f); });
   $("#vAi").onclick = () => copyAiPrompt({ course: f.course.name, module: isModule ? f.module.path : "", lesson: "" });
   $("#vReveal").onclick = () => revealMenu(f);
@@ -441,7 +449,7 @@ function renderLesson(l) {
   if (!V.set || !l.snaps[V.set]) V.set = ["combined", "visual", "all"].find(s => l.snaps[s]) || null;
   const SETN = { all: "OVERVIEW", visual: "VISUAL-ONLY", combined: "COMBINED" };
   const crumbs = ["LIBRARY", courseLabel(l.course), l.module_path ? l.module : ""].filter(Boolean).join(" / ");
-  $("#fview").innerHTML = `<button class="btn small back" data-back>← LIBRARY</button><div class="fhead"><div class="crumbs">${esc(crumbs)}</div><h2>${esc(l.title)}</h2></div>
+  $("#fview").innerHTML = `${MODE === "mf" ? backToFolderBtn(l) : '<button class="btn small back" data-back>← LIBRARY</button>'}<div class="fhead"><div class="crumbs">${esc(crumbs)}</div><h2>${esc(l.title)}</h2></div>${folderTag([l.rel])}
     <div class="chips">${l.transcript ? `<span class="chip hot">TRANSCRIPT · ${num(l.words)} WORDS${l.dur ? " · " + dur(l.dur) : ""}</span>` : '<span class="chip">NO TRANSCRIPT</span>'}
       ${l.cues ? `<span class="chip hot">★ ${l.cues} VISUAL CUES</span>` : ""}
       ${sets.map(s => `<span class="chip hot">${SETN[s]} · ${l.snaps[s].count} IMAGES</span>`).join("")}
@@ -456,8 +464,10 @@ function renderLesson(l) {
       <span class="srch" id="srch" ${V.tab === "snaps" ? "hidden" : ""}><input type="search" id="vq" placeholder="SEARCH THIS TEXT…" value="${esc(V.q)}" autocomplete="off" spellcheck="false"><button class="btn small" id="vPrev" title="Previous match">↑</button><button class="btn small" id="vNext" title="Next match">↓</button><span class="cnt" id="vCnt"></span></span>
       <span class="grow"></span><button class="btn small" id="vCopy" ${V.tab === "snaps" ? "hidden" : ""}>COPY</button>
       <button class="btn small" id="vAi" title="Copy a prompt that points your AI at this lesson">COPY AI PROMPT</button>
+      <button class="btn small" id="vMove" title="Put this lesson in one of your own folders">MOVE TO FOLDER…</button>
       <button class="btn small" id="vReveal">SHOW IN FINDER</button><button class="btn small danger" id="vDelete" ${ST && ST.running ? "disabled title='A job is running'" : ""}>DELETE…</button></div>
     <div id="vbody"></div>`;
+  $("#vMove").onclick = () => moveLessons([l.rel]);
   $("#vAi").onclick = () => copyAiPrompt({ course: l.course, module: l.module_path, lesson: l.rel });
   $$("#fview [data-vt]").forEach(b => b.onclick = () => { V.tab = b.dataset.vt; V.q = ""; renderLesson(l); });
   $("#vReveal").onclick = () => revealMenu(l);

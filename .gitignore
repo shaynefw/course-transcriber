@@ -20,6 +20,9 @@ AI-GUIDE.md
 LIBRARY.md
 findings/
 
+# Your own folder layout for the FILES tab (labels only)
+my-folders.json
+
 # Local working notes (not part of the project)
 findings.md
 progress.md

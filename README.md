@@ -134,6 +134,13 @@ On the left is the library: **course → module → lesson**, with a filter box 
 - **TRANSCRIPT**, **TIMESTAMPS** (the `[VISUAL]` lines are highlighted) and **VISUAL CUES**: readable in the panel, with a search box (Enter or the arrows step through matches) and a **Copy** button. Click a timestamp line to jump straight to the nearest snapshot.
 - **SNAPSHOTS**: a thumbnail gallery for each set, with a "★ visual only" filter. Click a picture to enlarge it, see what was being said at that moment, and step through with the arrow keys.
 
+**Sorting into your own folders (MY FOLDERS).** The left list is sorted by channel, which is hard to use when you can't remember which channel a lesson came from. Switch the list from **BY CHANNEL** to **MY FOLDERS** to make your own folders, nested as deep as you like (for example *Risk → Position sizing*).
+
+- **Make folders:** **+ NEW FOLDER** (highlight a folder first to make a subfolder), then **Rename**, **Move folder…** or **Delete folder…** from the folder's page.
+- **Move lessons in:** open **UNSORTED** (everything you haven't filed yet) or any folder, tick lessons, a module or a whole channel, and press **Move selected…**. You can also drag lessons, modules, channels or folders onto a folder in the left list. On a phone, use the button. **Move to folder…** also sits on every lesson, module and course page in BY CHANNEL.
+- **Whole channels follow:** if you move every lesson of a channel (or module), the dialog offers to also put *future* lessons from it in the same folder, so new transcripts land where you expect.
+- **Only labels change.** Folders are saved in `my-folders.json` (not committed to git). No transcript, snapshot or video is moved, renamed or deleted, and the tool's scripts and your AI keep using the normal paths. Deleting a folder never deletes lessons: they move up one level, or to UNSORTED. To start over, delete `my-folders.json`.
+
 **Showing files in Finder is optional.** Every view has a **Show in Finder** button, but you never need it to read or manage the files.
 
 **Deleting files** (the **Delete…** button on a lesson, module or course):
@@ -425,9 +432,10 @@ snapshots.py             snapshot engine (three modes), speech detection, _snaps
 webdl.py                 downloads web videos into videos/Web videos/ (yt-dlp)
 gui.py                   the local control panel server (standard library only, 127.0.0.1)
 files_api.py             the FILES tab backend: list, read, and safely delete outputs
+organizer.py             MY FOLDERS: your own folder labels for lessons (saved in my-folders.json)
 ai_helper.py             builds AI-GUIDE.md, LIBRARY.md, the prompts and the findings-file naming
 findings.py              command-line helper the AI uses to create and list its notes files
-ui/                      the panel's look and logic: index.html, style.css, app.js (edit and refresh the page)
+ui/                      the panel's look and logic: index.html, style.css, app.js, folders.js (edit and refresh the page)
 gui.command              starts the panel + opens the browser
 make-app.command         builds Transcriber.app (launcher + icon)
 transcribe.command       one-click transcribe (+ transcribe-watch.command)

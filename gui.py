@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlparse
 
 import ai_helper as AI
 import files_api as FA
+import organizer as ORG
 import snapshots as SN
 import transcribe as T
 
@@ -491,6 +492,8 @@ class Handler(BaseHTTPRequestHandler):
     def _api_get(self, path, q):
         if path == "/api/tree":
             return self._send(200, json.dumps(FA.tree(force=q.get("force") == "1")))
+        if path == "/api/folders":
+            return self._send(200, json.dumps(ORG.get()))
         if path == "/api/storage":
             return self._send(200, json.dumps(FA.storage(force=q.get("force") == "1")))
         if path == "/api/text":
@@ -561,6 +564,23 @@ class Handler(BaseHTTPRequestHandler):
                 except (ValueError, OSError) as e:
                     res.update(ok=False, error=str(e))
                 _scan_cache["t"] = 0
+        elif p.startswith("/api/folders/"):
+            try:
+                act = p[len("/api/folders/"):]
+                if act == "create":
+                    res.update(ORG.create(body.get("name"), body.get("parent")))
+                elif act == "rename":
+                    res.update(ORG.rename(str(body.get("id", "")), body.get("name")))
+                elif act == "move":
+                    res.update(ORG.move_folder(str(body.get("id", "")), body.get("parent")))
+                elif act == "delete":
+                    res.update(ORG.delete_folder(str(body.get("id", ""))))
+                elif act == "assign":
+                    res.update(ORG.assign(body.get("keys"), body.get("folder")))
+                else:
+                    res.update(ok=False, error="unknown action")
+            except ValueError as e:
+                res.update(ok=False, error=str(e))
         elif p == "/api/reveal":
             try:
                 FA.reveal(str(body.get("root", "")), str(body.get("rel", "")))

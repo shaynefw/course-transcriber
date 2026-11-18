@@ -127,6 +127,8 @@
       <div class="storage" id="storage"></div>
       <div class="files" id="files" data-pane="tree">
         <aside class="ftree">
+          <div class="fmode"><div class="seg" id="fmodeSeg"><button data-fm="ch">BY CHANNEL</button><button data-fm="mf">MY FOLDERS</button></div></div>
+          <div class="fnew" id="fnew" hidden><button class="btn small" id="fnewBtn">+ NEW FOLDER</button></div>
           <div class="fsearch"><input id="fsearch" type="search" placeholder="FILTER LESSONS…  ( / )" autocomplete="off" spellcheck="false"><button class="btn small" id="frefresh" title="Reload the file list">↻</button></div>
           <div id="tree" class="tree"></div>
         </aside>
@@ -225,5 +227,6 @@
 <div class="overlay light" id="lightbox" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="/ui/app.js"></script>
+<script src="/ui/folders.js"></script>
 </body>
 </html>
