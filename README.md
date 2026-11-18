@@ -295,6 +295,8 @@ Because `_snapshots.txt` ties every image file to the sentence being spoken, the
 
 The **AI** tab gives you one prompt to paste into any AI that can read files on your computer (for example Claude Code). You pick a **task**, optionally narrow the **focus** to a course, module or lesson, and optionally type your goal. Then click **Copy prompt**.
 
+The focus lists can be sorted **BY CHANNEL** (course → module → lesson) or by **MY FOLDERS** (the folders you made in the FILES tab). With MY FOLDERS, pick a folder to point the AI at every lesson in it (tick **Include subfolders** to control whether nested folders count), or pick one lesson from it. **UNSORTED** covers lessons you haven't filed yet. A folder's page in FILES also has a **Copy AI prompt** button.
+
 The prompt is short. It tells the AI to read three generated files, in this order, and then do the task:
 
 | File | What it is |

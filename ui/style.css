@@ -444,6 +444,9 @@ input[type=checkbox]:indeterminate::after{transform:scale(1);width:9px;height:3p
   .pk{padding:12px 10px}
 }
 
+.lbl{font-size:11.5px;letter-spacing:.12em;color:var(--g2)}
+#aiSubWrap[hidden],#aiRowMf[hidden],#aiRowCh[hidden]{display:none}
+
 /* ---------- themed mouse cursors (kept last so they win over any earlier cursor rule) ---------- */
 html,body{cursor:var(--cur-default)}
 button,.btn,.tab,.tnode,.seg button,.ftabs button,.rw,label.chk,label.chk *,input[type=checkbox],.dd-btn,.dd-opt,.item .acts *,.srow,.srow *,.sg-h,.sg-h *,.dlg .opt,[role=button],summary,select,.pk,.mft,.mfc,.mfc *,.mf-in a,.crumbs a,.mfg,.mfl{cursor:var(--cur-pointer)}

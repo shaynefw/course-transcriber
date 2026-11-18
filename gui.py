@@ -537,6 +537,11 @@ class Handler(BaseHTTPRequestHandler):
         elif p == "/api/add-course":
             name, msg = pick_folder()
             res.update(name=name, msg=msg)
+        elif p == "/api/ai/prompt":
+            AI.ensure_fresh()
+            rels = [str(x) for x in (body.get("lesson_rels") or [])][:5000]
+            res["prompt"] = AI.make_prompt(str(body.get("task", "study")), "", "", "", str(body.get("goal", "")),
+                                           lesson_rels=rels, folder_label=str(body.get("folder_label", ""))[:200])
         elif p == "/api/ai/refresh":
             res.update(AI.write_all())
         elif p == "/api/findings/new":

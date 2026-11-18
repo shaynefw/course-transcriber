@@ -199,7 +199,7 @@ function renderMF(sel) {
       ls.forEach(l => rows.push(`<div class="mfl ${d}" draggable="true" data-r="${esc(l.rel)}">${chk()}<button class="mft" data-open="${esc(l.rel)}" title="${esc(l.title)}">${esc(l.title)}</button><span class="m">${badges(l)}${l.dur ? " · " + dur(l.dur) : ""}</span></div>`));
     });
   });
-  const folderBtns = un ? "" : `<button class="btn small" id="mfSub">+ NEW SUBFOLDER</button><button class="btn small" id="mfRen">RENAME</button><button class="btn small" id="mfMv">MOVE FOLDER…</button><button class="btn small danger" id="mfDel">DELETE FOLDER…</button>`;
+  const folderBtns = un ? "" : `<button class="btn small" id="mfAi" title="Copy a prompt that points your AI at every lesson in this folder">COPY AI PROMPT</button><button class="btn small" id="mfSub">+ NEW SUBFOLDER</button><button class="btn small" id="mfRen">RENAME</button><button class="btn small" id="mfMv">MOVE FOLDER…</button><button class="btn small danger" id="mfDel">DELETE FOLDER…</button>`;
   $("#fview").innerHTML = `<button class="btn small back" data-back>← MY FOLDERS</button><div class="fhead"><div class="crumbs">${crumbs}</div><h2>${un ? "UNSORTED" : esc(f.name)}</h2></div>
     <div class="stat4"><div><small>LESSONS HERE</small><b>${mine.length}</b></div>${un ? "" : `<div><small>IN SUBFOLDERS</small><b>${deep}</b></div>`}<div><small>TRANSCRIBED</small><b>${tr.length}</b></div><div><small>WORDS</small><b>${num(words)}</b></div></div>
     ${un ? '<p class="hint top0">Lessons you have not put in a folder yet. Tick some, then MOVE SELECTED, or drag them onto a folder on the left.</p>' : `<div class="toolbar">${folderBtns}</div>`}
@@ -225,6 +225,7 @@ function renderMF(sel) {
   if ($("#mfMove")) $("#mfMove").onclick = () => moveLessons([...MSEL]);
   $$("#fview .mfsub .rw").forEach(r => r.onclick = () => gotoFolder(r.dataset.f));
   if (!un) {
+    $("#mfAi").onclick = () => { const rels = [id].concat([...descendants(id)]).flatMap(x => (INF[x] || []).map(l => l.rel)); if (!rels.length) { toast("THIS FOLDER HAS NO LESSONS YET.", true); return; } copyAiPrompt({ rels, label: pathName(id) + " (and its subfolders)" }); };
     $("#mfSub").onclick = () => pickFolder({ title: "NEW SUBFOLDER", rootLabel: "TOP LEVEL", start: id, createOnly: true, note: "Type a name. It is created inside the folder that is highlighted." });
     $("#mfRen").onclick = async () => { const v = await textDialog("RENAME FOLDER", f.name, "RENAME"); if (v && v !== f.name) { try { await folderCall("rename", { id, name: v }); toast("RENAMED."); renderTree(); renderView(); } catch (e) { toast(e.message.toUpperCase(), true); } } };
     $("#mfMv").onclick = async () => {

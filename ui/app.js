@@ -838,18 +838,36 @@ function enhanceSelect(sel) {
 $$("select").forEach(enhanceSelect);
 
 /* ============================== AI tab: prompt builder + notes ============================== */
-const AIQ = { course: "", module: "", lesson: "" };
+const AIQ = { course: "", module: "", lesson: "", folder: "", flesson: "", sub: true };
+let AIMODE = store.get("aimode") || MODE;
 let aiTimer = null;
+function aiFolderLessons() {                      /* lessons the FOLDER dropdown stands for (null = everything) */
+  if (AIMODE !== "mf" || !AIQ.folder) return null;
+  if (AIQ.folder === "_") return INF[""] || [];
+  const ids = [AIQ.folder].concat(AIQ.sub ? [...descendants(AIQ.folder)] : []);
+  return ids.flatMap(id => INF[id] || []);
+}
+function aiFolderLabel() { return AIQ.folder === "_" ? "UNSORTED (not in any folder)" : pathName(AIQ.folder) + (AIQ.sub && kidsOf(AIQ.folder).length ? " (and its subfolders)" : ""); }
 function aiParams() {
+  if (AIMODE === "mf" && AIQ.flesson && LES[AIQ.flesson]) { const l = LES[AIQ.flesson]; return new URLSearchParams({ task: $("#aiTask").value, course: l.course, module: l.module_path, lesson: l.rel, goal: $("#aiGoal").value }); }
   return new URLSearchParams({ task: $("#aiTask").value, course: AIQ.course, module: AIQ.module, lesson: AIQ.lesson, goal: $("#aiGoal").value });
 }
+async function aiFolderPrompt(rels, label, goal) {
+  const r = await post("/api/ai/prompt", { task: $("#aiTask").value, goal: goal || "", lesson_rels: rels, folder_label: label });
+  if (r.ok === false || r.error || typeof r.prompt !== "string") throw new Error(r.error || "no prompt came back");
+  return r.prompt;
+}
 async function aiFetchPrompt(extra) {
+  if (!extra && AIMODE === "mf" && !AIQ.flesson) {
+    const ls = aiFolderLessons();
+    if (ls) { if (!ls.length) return "(This folder has no lessons yet. Move some in from the FILES tab, or pick another folder.)"; return aiFolderPrompt(ls.map(l => l.rel), aiFolderLabel(), $("#aiGoal").value); }
+  }
   const q = new URLSearchParams(extra || aiParams());
   return (await get("/api/ai/prompt?" + q.toString())).prompt;
 }
 async function copyAiPrompt(focus) {
   try {
-    const text = await aiFetchPrompt({ task: $("#aiTask").value, course: focus.course || "", module: focus.module || "", lesson: focus.lesson || "", goal: "" });
+    const text = focus.rels ? await aiFolderPrompt(focus.rels, focus.label || "", "") : await aiFetchPrompt({ task: $("#aiTask").value, course: focus.course || "", module: focus.module || "", lesson: focus.lesson || "", goal: "" });
     toast(await copyText(text) ? "AI PROMPT COPIED. PASTE IT INTO YOUR AI." : "COULDN'T COPY. OPEN THE AI TAB TO COPY IT BY HAND.", false);
   } catch (e) { toast("COULDN'T BUILD THE PROMPT: " + e.message, true); }
 }
@@ -860,6 +878,20 @@ function setSelect(sel, items, value) {                       /* items: [[value,
 }
 function aiFillSelects() {
   if (!TREE) return;
+  $$("#aiSeg button").forEach(b => b.classList.toggle("on", b.dataset.am === AIMODE));
+  $("#aiRowCh").hidden = AIMODE === "mf"; $("#aiRowMf").hidden = AIMODE !== "mf";
+  if (AIMODE === "mf") {
+    const items = [["", "ALL FOLDERS (WHOLE LIBRARY)"]];
+    const walk = (parent, depth) => kidsOf(parent).forEach(f => { items.push([f.id, "  ".repeat(depth) + (depth ? "↳ " : "") + f.name + " (" + countAll(f.id) + ")"]); walk(f.id, depth + 1); });
+    walk(null, 0);
+    items.push(["_", "UNSORTED (" + (INF[""] || []).length + ")"]);
+    setSelect($("#aiFolder"), items, AIQ.folder); AIQ.folder = $("#aiFolder").value;
+    $("#aiSubWrap").hidden = !AIQ.folder || AIQ.folder === "_" || !kidsOf(AIQ.folder).length;
+    const ls = aiFolderLessons() || allLessons();
+    setSelect($("#aiFLesson"), [["", AIQ.folder ? `ALL ${ls.length} LESSON${ls.length === 1 ? "" : "S"} IN THE FOLDER` : "ALL LESSONS"], ...ls.map(l => [l.rel, (l.course ? l.course + " / " : "") + l.title])], AIQ.flesson);
+    AIQ.flesson = $("#aiFLesson").value;
+    return;
+  }
   const courses = TREE.courses;
   setSelect($("#aiCourse"), [["", "ALL COURSES"], ...courses.map(c => [c.name, c.name || "(LOOSE FILES)"])], AIQ.course);
   AIQ.course = $("#aiCourse").value;
@@ -891,6 +923,10 @@ async function aiOpen() {
   if (id === "aiLesson") AIQ.lesson = $("#aiLesson").value;
   aiFillSelects(); aiBuild();
 }));
+$("#aiFolder").addEventListener("change", () => { AIQ.folder = $("#aiFolder").value; AIQ.flesson = ""; aiFillSelects(); aiBuild(); });
+$("#aiFLesson").addEventListener("change", () => { AIQ.flesson = $("#aiFLesson").value; aiBuild(); });
+$("#aiSub").addEventListener("change", () => { AIQ.sub = $("#aiSub").checked; AIQ.flesson = ""; aiFillSelects(); aiBuild(); });
+$("#aiSeg").addEventListener("click", e => { const b = e.target.closest("[data-am]"); if (!b || b.dataset.am === AIMODE) return; AIMODE = b.dataset.am; store.set("aimode", AIMODE); aiFillSelects(); aiBuild(); });
 $("#aiTask").addEventListener("change", aiBuild);
 $("#aiGoal").addEventListener("input", () => { clearTimeout(aiTimer); aiTimer = setTimeout(aiBuild, 350); });
 $("#aiCopy").onclick = async () => { const ok = await copyText($("#aiPrompt").value); $("#aiMsg").textContent = ok ? "COPIED ✓ PASTE IT INTO YOUR AI" : "COULDN'T COPY: SELECT THE TEXT AND PRESS ⌘C"; setTimeout(() => $("#aiMsg").textContent = "", 5000); };

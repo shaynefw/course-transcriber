@@ -320,9 +320,24 @@ TASKS = {
 }
 
 
-def _focus(tree, course, module_path, lesson_rel):
+def _focus(tree, course, module_path, lesson_rel, lesson_rels=None, folder_label=""):
     """-> (heading, [lines]) describing what the AI should concentrate on, with absolute paths."""
     lines = []
+    if lesson_rels:                                   # a folder the user made in the FILES tab (a set of lessons)
+        want = set(lesson_rels)
+        ls = [l for l in all_lessons(tree) if l["rel"] in want]
+        if ls:
+            nt = sum(1 for l in ls if l.get("transcript"))
+            lines = [f"Folder: {folder_label or '(my folder)'}  ({len(ls)} lessons, {nt} with transcripts). My own grouping; the lessons can come from different courses.",
+                     f"  transcripts: {ROOT / 'transcripts'}/<lesson path>.txt   (also .timestamps.txt and .visual-cues.txt next to it)",
+                     "  snapshots: " + ", ".join(f"{ROOT / d}/<lesson path>/" for _, d, _ in SETS) + "   (only where they exist)",
+                     "  Each line below is: <lesson path>  [lesson id]  flags (T transcript, V visual cues, S snapshots):"]
+            for l in ls[:200]:
+                fl = ("T" if l.get("transcript") else "") + ("V" if l.get("cues") else "") + ("S" if l.get("snaps") else "")
+                lines.append(f"  - {l['rel']}  [{lesson_id(l['title'], l['rel'])}]  {fl}")
+            if len(ls) > 200:
+                lines.append(f"  … and {len(ls) - 200} more (see LIBRARY.md)")
+            return "A FOLDER OF LESSONS", lines
     cs = next((c for c in tree["courses"] if c["name"] == course), None) if course else None
     if lesson_rel:
         L = next((l for c in tree["courses"] for m in c["modules"] for l in m["lessons"] if l["rel"] == lesson_rel), None)
@@ -356,10 +371,10 @@ def _focus(tree, course, module_path, lesson_rel):
     return "THE WHOLE LIBRARY", [f"All courses and modules listed in LIBRARY.md ({n} lessons in total). Work through them in the order they appear."]
 
 
-def make_prompt(task="study", course="", module_path="", lesson_rel="", goal="", tree=None) -> str:
+def make_prompt(task="study", course="", module_path="", lesson_rel="", goal="", tree=None, lesson_rels=None, folder_label="") -> str:
     tree = tree or _tree()
     ttl, body = TASKS.get(task, TASKS["study"])
-    heading, flines = _focus(tree, course, module_path, lesson_rel)
+    heading, flines = _focus(tree, course, module_path, lesson_rel, lesson_rels, folder_label)
     cmd = f"python3 {shlex.quote(str(ROOT / 'findings.py'))}"
     out = [
         "You are helping me study course material that a local tool has already transcribed and screenshotted. Everything is on this computer.",

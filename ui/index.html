@@ -143,10 +143,16 @@
         <div class="row">
           <label class="fill">TASK <select id="aiTask"><option value="study" selected>STUDY AND LEARN THE MATERIAL</option><option value="resume">CONTINUE FROM ITS NOTES</option><option value="ask">ANSWER MY QUESTIONS FROM THE MATERIAL</option></select></label>
         </div>
-        <div class="row mt">
+        <div class="row mt"><span class="lbl">SORT THE LISTS</span><div class="seg" id="aiSeg"><button data-am="ch">BY CHANNEL</button><button data-am="mf">MY FOLDERS</button></div></div>
+        <div class="row mt" id="aiRowCh">
           <label class="fill">COURSE <select id="aiCourse"><option value="">ALL COURSES</option></select></label>
           <label class="fill">MODULE <select id="aiModule"><option value="">ALL MODULES</option></select></label>
           <label class="fill">LESSON <select id="aiLesson"><option value="">ALL LESSONS</option></select></label>
+        </div>
+        <div class="row mt" id="aiRowMf" hidden>
+          <label class="fill">FOLDER <select id="aiFolder"><option value="">ALL FOLDERS</option></select></label>
+          <label class="fill">LESSON <select id="aiFLesson"><option value="">ALL LESSONS</option></select></label>
+          <label class="chk" id="aiSubWrap"><input type="checkbox" id="aiSub" checked><span>INCLUDE SUBFOLDERS</span></label>
         </div>
         <label class="blk mt">MY GOAL OR QUESTION (OPTIONAL)
           <textarea id="aiGoal" rows="2" placeholder="e.g. Learn the entry rules and check them against the screenshots" spellcheck="false"></textarea></label>
